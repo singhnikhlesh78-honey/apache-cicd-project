@@ -76,6 +76,44 @@ pipeline {
                 }
             }
         }
+
+        stage('Deploy to Kubernetes') {
+            steps {
+                sh '''
+                    echo "Deploying Apache application to Kubernetes..."
+
+                    kubectl apply -f deployment.yaml
+                    kubectl apply -f service.yaml
+
+                    kubectl set image deployment/apache-cicd-project \
+                        apache=${IMAGE_NAME}:${IMAGE_TAG}
+
+                    kubectl rollout status deployment/apache-cicd-project --timeout=120s
+
+                    echo "Kubernetes deployment completed."
+                '''
+            }
+        }
+
+        stage('Verify Deployment') {
+            steps {
+                sh '''
+                    echo "Checking Kubernetes deployment..."
+
+                    kubectl get deployment apache-cicd-project
+
+                    kubectl get pods \
+                        -l app=apache-cicd-project \
+                        -o wide
+
+                    kubectl get service apache-cicd-project
+
+                    kubectl rollout status deployment/apache-cicd-project --timeout=120s
+
+                    echo "Deployment verification completed successfully."
+                '''
+            }
+        }
     }
 
     post {
@@ -87,11 +125,11 @@ pipeline {
         }
 
         success {
-            echo 'Apache Docker CI pipeline completed successfully!'
+            echo 'Apache Docker + Kubernetes CI/CD pipeline completed successfully!'
         }
 
         failure {
-            echo 'Apache Docker CI pipeline failed!'
+            echo 'Apache Docker + Kubernetes CI/CD pipeline failed!'
         }
     }
 }
