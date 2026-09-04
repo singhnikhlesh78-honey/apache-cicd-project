@@ -27,10 +27,14 @@ pipeline {
         stage('Docker Build') {
             steps {
                 sh '''
+                    echo "Building Docker image..."
+
                     docker build \
                         -t ${IMAGE_NAME}:${IMAGE_TAG} \
                         -t ${IMAGE_NAME}:latest \
                         .
+
+                    echo "Docker image build completed."
                 '''
             }
         }
@@ -38,6 +42,8 @@ pipeline {
         stage('Docker Test') {
             steps {
                 sh '''
+                    echo "Testing Docker image..."
+
                     docker rm -f apache-cicd-project-test 2>/dev/null || true
 
                     docker run -d \
@@ -50,6 +56,8 @@ pipeline {
                     curl --fail http://127.0.0.1:8081
 
                     docker rm -f apache-cicd-project-test
+
+                    echo "Docker test completed successfully."
                 '''
             }
         }
@@ -88,9 +96,10 @@ pipeline {
                     kubectl set image deployment/apache-cicd-project \
                         apache=${IMAGE_NAME}:${IMAGE_TAG}
 
-                    kubectl rollout status deployment/apache-cicd-project --timeout=120s
+                    kubectl rollout status deployment/apache-cicd-project \
+                        --timeout=120s
 
-                    echo "Kubernetes deployment completed."
+                    echo "Kubernetes deployment completed successfully."
                 '''
             }
         }
@@ -100,15 +109,20 @@ pipeline {
                 sh '''
                     echo "Checking Kubernetes deployment..."
 
+                    echo "----- Deployment -----"
                     kubectl get deployment apache-cicd-project
 
+                    echo "----- Pods -----"
                     kubectl get pods \
                         -l app=apache-cicd-project \
                         -o wide
 
+                    echo "----- Service -----"
                     kubectl get service apache-cicd-project
 
-                    kubectl rollout status deployment/apache-cicd-project --timeout=120s
+                    echo "----- Rollout Status -----"
+                    kubectl rollout status deployment/apache-cicd-project \
+                        --timeout=120s
 
                     echo "Deployment verification completed successfully."
                 '''
