@@ -1,0 +1,26 @@
+apiVersion: apps/v1
+kind: Deployment
+
+metadata:
+  name: apache-cicd-project
+
+spec:
+  replicas: 2
+
+  selector:
+    matchLabels:
+      app: apache-cicd-project
+
+  template:
+    metadata:
+      labels:
+        app: apache-cicd-project
+
+    spec:
+      containers:
+        - name: apache
+          image: nikhleshtest/apache-cicd-newproject:1
+          imagePullPolicy: Always
+
+          ports:
+            - containerPort: 80
